@@ -389,7 +389,6 @@ function speakEstonianFallback(num){
 
 // Preload Estonian audio on page load
 preloadEstonianAudio();
-}
 
 elems.themeSelect.addEventListener('change', (e)=>{
   state.theme = e.target.value;

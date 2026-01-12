@@ -311,22 +311,22 @@ function speakNumber(lang){
     return;
   }
   
+  // For Russian, use pre-recorded audio files for consistent pronunciation
+  if(lang === 'ru'){
+    playRussianAudio(state.target);
+    return;
+  }
+  
+  // English uses TTS
   if('speechSynthesis' in window){
     // Cancel any ongoing speech
     speechSynthesis.cancel();
     
-    let text = String(state.target);
-    let voice = voiceCache.en;
-    let langCode = 'en-US';
-    
-    if(lang === 'ru'){
-      text = russianNumbers[state.target] || String(state.target);
-      voice = voiceCache.ru;
-      langCode = 'ru-RU';
-    }
+    const text = String(state.target);
+    const voice = voiceCache.en;
     
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langCode;
+    utterance.lang = 'en-US';
     if(voice) utterance.voice = voice;
     utterance.rate = 1.0; // Natural pace, not too slow
     utterance.pitch = 1.4; // Higher pitch = more cheerful/playful
@@ -349,14 +349,37 @@ const estonianAudioUrls = {
   10: 'assets/audio/et/kümme.mp3',
 };
 
+// Russian audio files - using pre-recorded native pronunciation
+const russianAudioUrls = {
+  1: 'assets/audio/ru/odin.mp3',
+  2: 'assets/audio/ru/dva.mp3',
+  3: 'assets/audio/ru/tri.mp3',
+  4: 'assets/audio/ru/chetyre.mp3',
+  5: 'assets/audio/ru/pjat.mp3',
+  6: 'assets/audio/ru/shest.mp3',
+  7: 'assets/audio/ru/sem.mp3',
+  8: 'assets/audio/ru/vosem.mp3',
+  9: 'assets/audio/ru/devjat.mp3',
+  10: 'assets/audio/ru/desjat.mp3',
+};
+
 // Cache audio elements for instant playback
 const estonianAudioCache = {};
+const russianAudioCache = {};
 
 function preloadEstonianAudio(){
   for(const [num, url] of Object.entries(estonianAudioUrls)){
     const audio = new Audio(url);
     audio.preload = 'auto';
     estonianAudioCache[num] = audio;
+  }
+}
+
+function preloadRussianAudio(){
+  for(const [num, url] of Object.entries(russianAudioUrls)){
+    const audio = new Audio(url);
+    audio.preload = 'auto';
+    russianAudioCache[num] = audio;
   }
 }
 
@@ -374,6 +397,20 @@ function playEstonianAudio(num){
   }
 }
 
+function playRussianAudio(num){
+  const audio = russianAudioCache[num];
+  if(audio){
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      // Fallback to speech synthesis if audio fails
+      console.log('Russian audio failed, falling back to TTS');
+      speakRussianFallback(num);
+    });
+  } else {
+    speakRussianFallback(num);
+  }
+}
+
 function speakEstonianFallback(num){
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
@@ -387,8 +424,22 @@ function speakEstonianFallback(num){
   }
 }
 
-// Preload Estonian audio on page load
+function speakRussianFallback(num){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const text = russianNumbers[num] || String(num);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ru-RU';
+    if(voiceCache.ru) utterance.voice = voiceCache.ru;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.4;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+// Preload audio on page load
 preloadEstonianAudio();
+preloadRussianAudio();
 
 elems.themeSelect.addEventListener('change', (e)=>{
   state.theme = e.target.value;

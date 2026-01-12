@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Balance Scale — Numbers for Toddlers</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar" role="banner">
+    <h1 class="brand">Malen Studio — Balance Scale</h1>
+    <div class="controls" role="group" aria-label="Game controls">
+      <button id="newRoundBtn" class="btn primary" aria-label="New round">New Round</button>
+      <div class="select-row">
+        <label for="themeSelect">Theme:</label>
+        <select id="themeSelect" aria-label="Choose theme">
+          <option value="apple">Apples</option>
+          <option value="cat">Cats</option>
+        </select>
+      </div>
+      <div class="select-row">
+        <label for="maxNumber">Max number:</label>
+        <select id="maxNumber" aria-label="Max number">
+          <option value="5">5</option>
+          <option value="7">7</option>
+          <option value="10" selected>10</option>
+        </select>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="soundToggle" />
+        <span class="slider"></span>
+        <span class="switch-label">Sound</span>
+      </label>
+    </div>
+  </header>
+
+  <main id="game" role="main">
+    <p class="hint" id="hint">Drag the <strong>objects</strong> onto the right pan to match the number on the left.</p>
+
+    <section class="scale" aria-label="Balance scale" role="application">
+      <div class="speak-buttons">
+        <button id="speakBtnEt" class="btn speak-circle" aria-label="Say number in Estonian" title="Vajuta ja kuula"><span class="lang-label">EE</span><span class="sound-icon">🔊</span></button>
+        <button id="speakBtnRu" class="btn speak-circle" aria-label="Say number in Russian" title="Нажми и слушай"><span class="lang-label">RU</span><span class="sound-icon">🔊</span></button>
+        <button id="speakBtnEn" class="btn speak-circle" aria-label="Say number in English" title="Press & listen"><span class="lang-label">ENG</span><span class="sound-icon">🔊</span></button>
+      </div>
+      
+      <section class="tray" aria-label="Object tray">
+        <div id="trayItems" class="tray-items"></div>
+      </section>
+      
+      <div class="scale-wrapper" id="scaleWrapper">
+        <div id="beam" class="beam" aria-hidden="true">
+          <!-- Pan assemblies attached to beam ends -->
+          <div class="pan-assembly left-assembly">
+            <div id="leftPan" class="pan left">
+              <div id="leftContent" class="pan-content" aria-label="Left pan shows target number" aria-live="polite">
+                <div class="number-card" id="targetCard" role="img" aria-label="Target number"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pan-assembly right-assembly">
+            <div id="rightPan" class="pan right">
+              <div id="rightContent" class="pan-content" aria-label="Right pan items" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="fulcrum" class="fulcrum" aria-hidden="true">
+          <div class="fulcrum-base"></div>
+        </div>
+      </div>
+    </section>
+
+    <div id="celebration" class="celebration" aria-live="assertive" aria-hidden="true"></div>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <p>Designed for ages 2–3. Minimal, ad‑free, privacy‑friendly.</p>
+    <p class="copyright">© Malen Studio</p>
+  </footer>
+
+  <audio id="successAudio" src="https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3" preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "routes": [
+    { "route": "/", "statusCode": 200 }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["*.{css,js,png,svg,wav}"]
+  }
+}

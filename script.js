@@ -268,23 +268,36 @@ const estonianNumbers = ['null','üks','kaks','kolm','neli','viis','kuus','seits
 
 // Cache voices to avoid delay
 let voiceCache = { en: null, ru: null, et: null };
+let voicesLoaded = false;
 
 function loadVoices(){
+  // Only load once to keep voices consistent within session
+  if(voicesLoaded) return;
+  
   const voices = speechSynthesis.getVoices();
   if(voices.length > 0){
-    // Find best English voice
-    voiceCache.en = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    // Find best English voice - prefer female voices
+    voiceCache.en = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female')) ||
+                    voices.find(v => v.lang.startsWith('en')) || 
+                    voices[0];
     // Find best Russian voice
-    voiceCache.ru = voices.find(v => v.lang.startsWith('ru')) || null;
+    voiceCache.ru = voices.find(v => v.lang.startsWith('ru') && v.name.toLowerCase().includes('female')) ||
+                    voices.find(v => v.lang.startsWith('ru')) || 
+                    null;
     // Find best Estonian voice
     voiceCache.et = voices.find(v => v.lang.startsWith('et')) || null;
+    
+    voicesLoaded = true;
   }
 }
 
 // Load voices immediately and on change
 if('speechSynthesis' in window){
   loadVoices();
-  speechSynthesis.onvoiceschanged = loadVoices;
+  // Keep listening until voices are loaded
+  speechSynthesis.onvoiceschanged = () => {
+    if(!voicesLoaded) loadVoices();
+  };
   // Warm up the speech synthesis engine
   const warmup = new SpeechSynthesisUtterance('');
   warmup.volume = 0;
@@ -292,6 +305,12 @@ if('speechSynthesis' in window){
 }
 
 function speakNumber(lang){
+  // For Estonian, use pre-recorded audio files since TTS support is poor
+  if(lang === 'et'){
+    playEstonianAudio(state.target);
+    return;
+  }
+  
   if('speechSynthesis' in window){
     // Cancel any ongoing speech
     speechSynthesis.cancel();
@@ -304,10 +323,6 @@ function speakNumber(lang){
       text = russianNumbers[state.target] || String(state.target);
       voice = voiceCache.ru;
       langCode = 'ru-RU';
-    } else if(lang === 'et'){
-      text = estonianNumbers[state.target] || String(state.target);
-      voice = voiceCache.et;
-      langCode = 'et-EE';
     }
     
     const utterance = new SpeechSynthesisUtterance(text);
@@ -318,6 +333,62 @@ function speakNumber(lang){
     utterance.volume = 1.0; // Full volume
     speechSynthesis.speak(utterance);
   }
+}
+
+// Estonian audio files - using pre-recorded native pronunciation
+const estonianAudioUrls = {
+  1: 'assets/audio/et/üks.mp3',
+  2: 'assets/audio/et/kaks.mp3',
+  3: 'assets/audio/et/kolm.mp3',
+  4: 'assets/audio/et/neli.mp3',
+  5: 'assets/audio/et/viis.mp3',
+  6: 'assets/audio/et/kuus.mp3',
+  7: 'assets/audio/et/seitse.mp3',
+  8: 'assets/audio/et/kaheksa.mp3',
+  9: 'assets/audio/et/üheksa.mp3',
+  10: 'assets/audio/et/kümme.mp3',
+};
+
+// Cache audio elements for instant playback
+const estonianAudioCache = {};
+
+function preloadEstonianAudio(){
+  for(const [num, url] of Object.entries(estonianAudioUrls)){
+    const audio = new Audio(url);
+    audio.preload = 'auto';
+    estonianAudioCache[num] = audio;
+  }
+}
+
+function playEstonianAudio(num){
+  const audio = estonianAudioCache[num];
+  if(audio){
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      // Fallback to speech synthesis if audio fails
+      console.log('Estonian audio failed, falling back to TTS');
+      speakEstonianFallback(num);
+    });
+  } else {
+    speakEstonianFallback(num);
+  }
+}
+
+function speakEstonianFallback(num){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const text = estonianNumbers[num] || String(num);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'et-EE';
+    if(voiceCache.et) utterance.voice = voiceCache.et;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.4;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+// Preload Estonian audio on page load
+preloadEstonianAudio();
 }
 
 elems.themeSelect.addEventListener('change', (e)=>{
